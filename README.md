@@ -1,4 +1,4 @@
 PDN
 ===
 
-create server H/W descriptions form a product name
+create server H/W descriptions from a product name
