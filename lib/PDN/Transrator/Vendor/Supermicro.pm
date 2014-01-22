@@ -540,6 +540,87 @@ my $motherboards = {
     },
 };
 
+# unofficial product naming conventions
+# SYS-2027PR-HTTR
+#     |||||  ||||
+#     |||||  |||`- Power Redundancy
+#     |||||  ||`-- Additional
+#     |||||  |`--- HDD Interface
+#     |||||  `---- Number of node
+#     ||||`------- TwinPro  
+#     |||`-------- System Generation
+#     ||`--------- Number of processor slots
+#     |`---------- Reserved Digit
+#     `----------- Form Factor
+my $superserver_twin = {
+    'Form Factor' => {
+        'Representation' => 'Form Factor',
+        'Options' => {
+            1 => '1U/2.5Inch HDD',
+            2 => '2U/2.5Inch HDD',
+            3 => '3U/2.5Inch HDD',
+            4 => '4U/2.5Inch HDD',
+            5 => '5U/3.5Inch HDD',
+            6 => '6U/3.5Inch HDD',
+            7 => '7U/3.5Inch HDD',
+            8 => '8U/3.5Inch HDD',
+        },
+    },
+    'Number of processor slots' => {
+        'Representation' => 'Number of processor slots',
+        'Options' => {
+            1 => 'Single processor slot',
+            2 => 'Dual processor slots',
+            4 => 'Quad processor slots',
+        },
+    },
+    'System Generation' => {
+        'Representation' => 'System Generation',
+        'Options' => {
+            8 => 'X10 Series',
+            7 => 'X9 Series',
+            6 => 'X8 Series',
+            5 => 'X7 Series',
+        },
+    },
+    'Chipset' => {
+        'Representation' => 'Chipset',
+        'Options' => {
+            PR => 'TwinPro/Socket R',
+        },
+    },
+    'Number of Node' => {
+        'Representation' => 'Number of Node',
+        'Options' => {
+            D  => 'Dual Node Hot Swap',
+            H  => 'Quad Node Hot Swap',
+        },
+    },
+    'HDD Interface' => {
+        'Representation' => 'HDD Interface',
+        'Options' => {
+            C0 => 'SAS3 LSI 3008',
+            C1 => 'SAS3 LSI 3108 + SuperCap',
+            T  => 'SATA Intel C606',
+        },
+    },
+    'Network Interface' => {
+        'Representation' => 'Network Interface',
+        'Options' => {
+            T => '2 x 10GBase-T X540',
+            F => '1 x FDR Mellanox X3',
+            Q => '1 x QDR Mellanox X3',
+        },
+    },
+    'Power Redundancy' => {
+        'Representation' => 'Power Redundancy',
+        'Options' => {
+            R => 'Redundant Power Supplies',
+        },
+    },
+};
+
+
 my $template = {
     'Controller Support1' => {
 		'Representation' => 'Controller Support1',
@@ -583,6 +664,7 @@ sub grok_specification {
 
     my $spec = superserver25($prod) ||
                superserver35($prod) ||
+               superserver_twin($prod) ||
                motherboards($prod) ||
                servers_amd($prod) ||
                motherboards_intel_up($prod) ||
@@ -729,6 +811,25 @@ sub motherboards {
 	);
 
 	return $spec;
+}
+
+# unofficial product naming conventions
+sub superserver_twin {
+    my $prod = shift;
+    my $spec = convention($prod,
+        'SYS-', 'str',
+        $superserver_twin->{'Form Factor'}, '1',
+        '0', 'str',
+        $superserver_twin->{'Number of processor slots'}, '1',
+        $superserver_twin->{'System Generation'}, '1',
+        $superserver_twin->{'Chipset'}, '1',
+        '-', 'str',
+        $superserver_twin->{'Number of Node'}, '1',
+        $superserver_twin->{'HDD Interface'}, '1',
+        $superserver_twin->{'Network Interface'}, '?',
+        $superserver_twin->{'Power Redundancy'}, '1',
+    );
+    return $spec;
 }
 
 sub convention {
