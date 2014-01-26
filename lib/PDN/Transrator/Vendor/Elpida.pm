@@ -196,6 +196,13 @@ my $ddr = {
         'DJ' => 'DDR3-1333',
         '1J' => 'DDR2-1066',
         '8E' => 'DDR2-800',
+        '70' => '7.0Gbps',
+        '7A' => '7.0Gbps',
+        '60' => '6.0Gbps',
+        '6A' => '6.0Gbps',
+        '50' => '5.0Gbps',
+        '4D' => '4.0G (tRAC=34, D Bin)',
+        '3C' => '3.2G (tRAC=35, C Bin)',
     },
 
     'CL' => {
@@ -273,7 +280,7 @@ sub ddr {
     my $product = shift;
     my %spec;
 
-    if ( $product =~ m/^(E)(D)(J|E|W)(42|21|11|20|40)(04|08|16|32)(B|D|E|A)(.)(BG)-(JS|GN|DJ|1J|8E)(L)?-(F)$/ ) {
+    if ( $product =~ m/^(E)(D)(J|E|W|X)(42|21|11|20|40|10)(04|08|16|32)(B|D|E|A)(.)(BG|SE)-(JS|GN|DJ|1J|8E|7A|70|6A|60|50|4D|3C)(L|A2)?-(F)$/ ) {
         # DDR3 or DDR2
         my ($vendor, $type, $family, $densitybank, $organization, $psi, $rev, $package, $speedcl, $detail, $environment) = ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11);
         my ($density, $bank, $power, $interface, $speed, $cl);
@@ -282,13 +289,19 @@ sub ddr {
         $spec{'Type'}           = $ddr->{'Type'}{$type};
         $spec{'Product Family'} = $ddr->{'Product Family'}{$family};
         $spec{'Density'}        = $ddr->{'Density Bit'}{$densitybank};
-        $spec{'Bank'}           = $ddr->{'Bank'}{$densitybank};
+        $spec{'Bank'}           = $ddr->{'Bank'}{$densitybank} unless ( $spec{'Product Family'} eq 'XDR' );
         $spec{'Organization'}   = $ddr->{'Organization'}{$organization};
-        $spec{'Power Supply'}   = $ddr->{'Power Supply'}{$psi};
-        $spec{'Interface'}      = $ddr->{'Interface'}{$psi};
+        if ( $spec{'Product Family'} eq 'GDDR5' ) {
+            $spec{'Power Supply'}   = $ddr->{'Power Supply'}{$psi};
+        } elsif ( $spec{'Product Family'} eq 'XDR' ) {
+            $spec{'Power Supply'}   = $ddr->{'XDR Power Supply'}{$psi};
+        } else {
+            $spec{'Power Supply'}   = $ddr->{'Power Supply'}{$psi};
+            $spec{'Interface'}      = $ddr->{'Interface'}{$psi};
+        }
         $spec{'Package'}        = $ddr->{'Package'}{$package};
         $spec{'Speed'}          = $ddr->{'Speed'}{$speedcl};
-        $spec{'CL'}             = $ddr->{'CL'}{$speedcl};
+        $spec{'CL'}             = $ddr->{'CL'}{$speedcl} if (defined $ddr->{'CL'}{$speedcl}); 
         $spec{'Spec Detail'}    = $ddr->{'Spec Detail'}{$detail} if (defined $detail);
         $spec{'RoHS'}           = $ddr->{'Environment Code'}{$environment};
         
@@ -313,6 +326,7 @@ sub ddr {
 
         return \%spec;
     } elsif ( $product =~ m/^(E)(C)(B|M)(44|24|13|22|10)(0A)(B|C)(.)(CN)-?(50)?-(Y3)$/ ) {
+        # DDR2 Mobile, DDR Mobile
         my ($vendor, $type, $family, $density, $organization, $power, $die, $package, $speed, $wafer) = ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10);
         $spec{'Vendor'}         = $ddr->{'Vendor'}{$vendor};
         $spec{'Type'}           = $ddr->{'Type'}{$type};
